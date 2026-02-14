@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react'
 import {
   LayoutDashboard,
   Users,
+  UserPlus,
   Webhook,
   Building2,
   FolderOpen,
@@ -36,6 +37,7 @@ const navItems: NavItem[] = [
   { title: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { title: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
   { title: 'Activity', href: '/dashboard/activity', icon: Activity },
+  { title: 'Team', href: '/dashboard/team', icon: UserPlus },
   { title: 'Partners', href: '/dashboard/partners', icon: Users },
   { title: 'Webhooks', href: '/dashboard/webhooks', icon: Webhook },
   { title: 'Embed Builder', href: '/dashboard/embed', icon: Building2 },
