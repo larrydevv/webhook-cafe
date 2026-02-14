@@ -14,6 +14,7 @@ import {
   User,
   Settings,
   Activity,
+  BarChart3,
   LogOut,
   Menu,
   X,
@@ -33,6 +34,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { title: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { title: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
   { title: 'Activity', href: '/dashboard/activity', icon: Activity },
   { title: 'Partners', href: '/dashboard/partners', icon: Users },
   { title: 'Webhooks', href: '/dashboard/webhooks', icon: Webhook },
