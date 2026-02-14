@@ -13,6 +13,7 @@ import {
   FolderOpen,
   User,
   Settings,
+  Activity,
   LogOut,
   Menu,
   X,
@@ -32,6 +33,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { title: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { title: 'Activity', href: '/dashboard/activity', icon: Activity },
   { title: 'Partners', href: '/dashboard/partners', icon: Users },
   { title: 'Webhooks', href: '/dashboard/webhooks', icon: Webhook },
   { title: 'Embed Builder', href: '/dashboard/embed', icon: Building2 },
