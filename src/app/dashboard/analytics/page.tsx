@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { FirmSwitcher } from '@/components/dashboard/FirmSwitcher'
-import { ArrowUp, ArrowDown, Users, Webhook, MessageSquare, Send } from 'lucide-react'
+import { ArrowUp, ArrowDown, Users, Webhook, MessageSquare, Send, Coffee, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
 
 interface PageProps {
@@ -22,7 +22,6 @@ export default async function AnalyticsPage({ searchParams }: PageProps) {
   const resolvedSearchParams = await searchParams
   const currentFirmId = resolvedSearchParams.firm
 
-  // Get user's firms
   const { data: firms } = await supabase
     .from('firms')
     .select('id, name, slug, logo_url')
@@ -35,7 +34,6 @@ export default async function AnalyticsPage({ searchParams }: PageProps) {
 
   const activeFirmId = currentFirmId || firms[0].id
 
-  // Get analytics data
   const [
     { count: partnersCount },
     { count: webhooksCount },
@@ -48,7 +46,6 @@ export default async function AnalyticsPage({ searchParams }: PageProps) {
     supabase.from('sent_messages').select('*', { count: 'exact', head: true }).eq('firm_id', activeFirmId).eq('status', 'failed')
   ])
 
-  // Mock chart data
   const weeklyData = [
     { day: 'Mon', sent: 12, failed: 1 },
     { day: 'Tue', sent: 19, failed: 2 },
@@ -62,93 +59,94 @@ export default async function AnalyticsPage({ searchParams }: PageProps) {
   const maxSent = Math.max(...weeklyData.map(d => d.sent))
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <div className="min-h-screen bg-background texture-paper p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-bold">Analytics</h2>
-          <p className="text-muted-foreground">
-            Track your firm's performance
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[#6B4423] flex items-center justify-center">
+            <Coffee className="w-6 h-6 text-[#F5F0E8]" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-[#1A1A1A]">Analytics</h2>
+            <p className="text-[#6B4423]">Track your performance</p>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <select className="p-2 rounded-lg border bg-background text-sm">
-            <option>Last 7 days</option>
-            <option>Last 30 days</option>
-            <option>Last 90 days</option>
-          </select>
-        </div>
+        <select className="p-2 rounded-lg border bg-[#F5F0E8] text-[#1A1A1A]">
+          <option>Last 7 days</option>
+          <option>Last 30 days</option>
+          <option>Last 90 days</option>
+        </select>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Card>
+        <Card className="cafe-card">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Partners</p>
-                <p className="text-3xl font-bold">{partnersCount || 0}</p>
+                <p className="text-sm text-[#6B4423]">Partners</p>
+                <p className="text-3xl font-bold text-[#1A1A1A]">{partnersCount || 0}</p>
                 <div className="flex items-center gap-1 text-green-500 text-sm mt-1">
-                  <ArrowUp className="w-3 h-3" />
+                  <TrendingUp className="w-3 h-3" />
                   <span>+12%</span>
                 </div>
               </div>
-              <div className="p-3 rounded-full bg-blue-500/10">
-                <Users className="w-6 h-6 text-blue-500" />
+              <div className="w-14 h-14 rounded-xl bg-[#6B4423]/10 flex items-center justify-center">
+                <Users className="w-7 h-7 text-[#6B4423]" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="cafe-card">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Webhooks</p>
-                <p className="text-3xl font-bold">{webhooksCount || 0}</p>
+                <p className="text-sm text-[#6B4423]">Webhooks</p>
+                <p className="text-3xl font-bold text-[#1A1A1A]">{webhooksCount || 0}</p>
                 <div className="flex items-center gap-1 text-green-500 text-sm mt-1">
-                  <ArrowUp className="w-3 h-3" />
+                  <TrendingUp className="w-3 h-3" />
                   <span>+5%</span>
                 </div>
               </div>
-              <div className="p-3 rounded-full bg-[#5865F2]/10">
-                <Webhook className="w-6 h-6 text-[#5865F2]" />
+              <div className="w-14 h-14 rounded-xl bg-[#1A1A1A]/10 flex items-center justify-center">
+                <Webhook className="w-7 h-7 text-[#1A1A1A]" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="cafe-card">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Messages Sent</p>
-                <p className="text-3xl font-bold">{messagesSent || 0}</p>
+                <p className="text-sm text-[#6B4423]">Sent</p>
+                <p className="text-3xl font-bold text-[#1A1A1A]">{messagesSent || 0}</p>
                 <div className="flex items-center gap-1 text-green-500 text-sm mt-1">
-                  <ArrowUp className="w-3 h-3" />
+                  <TrendingUp className="w-3 h-3" />
                   <span>+23%</span>
                 </div>
               </div>
-              <div className="p-3 rounded-full bg-green-500/10">
-                <Send className="w-6 h-6 text-green-500" />
+              <div className="w-14 h-14 rounded-xl bg-green-500/10 flex items-center justify-center">
+                <Send className="w-7 h-7 text-green-500" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="cafe-card">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Failed</p>
-                <p className="text-3xl font-bold">{messagesFailed || 0}</p>
+                <p className="text-sm text-[#6B4423]">Failed</p>
+                <p className="text-3xl font-bold text-[#1A1A1A]">{messagesFailed || 0}</p>
                 <div className="flex items-center gap-1 text-red-500 text-sm mt-1">
                   <ArrowDown className="w-3 h-3" />
                   <span>-8%</span>
                 </div>
               </div>
-              <div className="p-3 rounded-full bg-red-500/10">
-                <MessageSquare className="w-6 h-6 text-red-500" />
+              <div className="w-14 h-14 rounded-xl bg-red-500/10 flex items-center justify-center">
+                <MessageSquare className="w-7 h-7 text-red-500" />
               </div>
             </div>
           </CardContent>
@@ -157,11 +155,10 @@ export default async function AnalyticsPage({ searchParams }: PageProps) {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Weekly Activity Chart */}
-        <Card>
+        <Card className="cafe-card">
           <CardHeader>
-            <CardTitle>Weekly Activity</CardTitle>
-            <CardDescription>Messages sent per day</CardDescription>
+            <CardTitle className="text-[#1A1A1A]">Weekly Activity</CardTitle>
+            <CardDescription className="text-[#8B7355]">Messages sent per day</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[200px] flex items-end justify-between gap-2">
@@ -169,7 +166,7 @@ export default async function AnalyticsPage({ searchParams }: PageProps) {
                 <div key={day.day} className="flex-1 flex flex-col items-center gap-1">
                   <div className="w-full flex flex-col items-center gap-1">
                     <div
-                      className="w-full bg-green-500 rounded-t"
+                      className="w-full bg-[#6B4423] rounded-t"
                       style={{ height: `${(day.sent / maxSent) * 150}px` }}
                     />
                     <div
@@ -177,28 +174,27 @@ export default async function AnalyticsPage({ searchParams }: PageProps) {
                       style={{ height: `${(day.failed / maxSent) * 150}px`, marginTop: '-2px' }}
                     />
                   </div>
-                  <span className="text-xs text-muted-foreground">{day.day}</span>
+                  <span className="text-xs text-[#8B7355]">{day.day}</span>
                 </div>
               ))}
             </div>
             <div className="flex items-center justify-center gap-6 mt-4">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded bg-green-500" />
-                <span className="text-sm">Sent</span>
+                <div className="w-3 h-3 rounded bg-[#6B4423]" />
+                <span className="text-sm text-[#6B4423]">Sent</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded bg-red-500" />
-                <span className="text-sm">Failed</span>
+                <span className="text-sm text-red-500">Failed</span>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Delivery Rate */}
-        <Card>
+        <Card className="cafe-card">
           <CardHeader>
-            <CardTitle>Delivery Rate</CardTitle>
-            <CardDescription>Overall message success rate</CardDescription>
+            <CardTitle className="text-[#1A1A1A]">Delivery Rate</CardTitle>
+            <CardDescription className="text-[#8B7355]">Overall success rate</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-center py-8">
@@ -209,7 +205,7 @@ export default async function AnalyticsPage({ searchParams }: PageProps) {
                     cy="96"
                     r="88"
                     fill="none"
-                    stroke="#e5e7eb"
+                    stroke="#D4C4B0"
                     strokeWidth="12"
                   />
                   <circle
@@ -217,17 +213,17 @@ export default async function AnalyticsPage({ searchParams }: PageProps) {
                     cy="96"
                     r="88"
                     fill="none"
-                    stroke="#22c55e"
+                    stroke="#6B4423"
                     strokeWidth="12"
                     strokeDasharray={`${((messagesSent || 1) / ((messagesSent || 1) + (messagesFailed || 0))) * 554} 554`}
                     strokeLinecap="round"
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <p className="text-4xl font-bold">
+                  <p className="text-4xl font-bold text-[#1A1A1A]">
                     {Math.round(((messagesSent || 1) / ((messagesSent || 1) + (messagesFailed || 0))) * 100)}%
                   </p>
-                  <p className="text-sm text-muted-foreground">Success Rate</p>
+                  <p className="text-sm text-[#8B7355]">Success</p>
                 </div>
               </div>
             </div>
@@ -236,29 +232,29 @@ export default async function AnalyticsPage({ searchParams }: PageProps) {
       </div>
 
       {/* Recent Activity */}
-      <Card>
+      <Card className="cafe-card">
         <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-          <CardDescription>Your latest actions</CardDescription>
+          <CardTitle className="text-[#1A1A1A]">Recent Activity</CardTitle>
+          <CardDescription className="text-[#8B7355]">Your latest actions</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {[
-              { action: 'Message sent to #announcements', time: '2 minutes ago', status: 'success' },
+              { action: 'Message sent to #announcements', time: '2 min ago', status: 'success' },
               { action: 'Partner "TechCorp" added', time: '1 hour ago', status: 'info' },
               { action: 'Webhook "Marketing" created', time: '3 hours ago', status: 'info' },
               { action: 'Template "Launch" saved', time: 'Yesterday', status: 'info' },
               { action: 'Message failed to send', time: 'Yesterday', status: 'error' },
             ].map((activity, i) => (
-              <div key={i} className="flex items-center justify-between py-2 border-b last:border-0">
+              <div key={i} className="flex items-center justify-between py-3 border-b last:border-0" style={{ borderColor: 'rgba(107, 68, 35, 0.1)' }}>
                 <div className="flex items-center gap-3">
                   <div className={`w-2 h-2 rounded-full ${
                     activity.status === 'success' ? 'bg-green-500' :
-                    activity.status === 'error' ? 'bg-red-500' : 'bg-blue-500'
+                    activity.status === 'error' ? 'bg-red-500' : 'bg-[#6B4423]'
                   }`} />
-                  <span>{activity.action}</span>
+                  <span className="text-[#1A1A1A]">{activity.action}</span>
                 </div>
-                <span className="text-sm text-muted-foreground">{activity.time}</span>
+                <span className="text-sm text-[#8B7355]">{activity.time}</span>
               </div>
             ))}
           </div>

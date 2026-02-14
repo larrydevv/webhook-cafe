@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Bell, Mail, MessageSquare, Globe, Clock, Save } from 'lucide-react'
+import { Bell, Mail, MessageSquare, Globe, Clock, Save, Coffee } from 'lucide-react'
 
 export default async function SettingsPage() {
   const supabase = await createClient()
@@ -16,29 +16,37 @@ export default async function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <div className="min-h-screen bg-background texture-paper p-6">
       <div className="max-w-2xl mx-auto">
-        <h2 className="text-2xl font-bold mb-6">Settings</h2>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-xl bg-[#6B4423] flex items-center justify-center">
+            <Coffee className="w-6 h-6 text-[#F5F0E8]" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-[#1A1A1A]">Settings</h2>
+            <p className="text-[#6B4423]">Configure your preferences</p>
+          </div>
+        </div>
 
         {/* Notifications */}
-        <Card className="mb-6">
+        <Card className="cafe-card mb-6">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bell className="w-5 h-5" />
+            <CardTitle className="flex items-center gap-2 text-[#1A1A1A]">
+              <Bell className="w-5 h-5 text-[#6B4423]" />
               Notifications
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-[#8B7355]">
               Choose what notifications you want to receive
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Mail className="w-5 h-5 text-muted-foreground" />
+                <Mail className="w-5 h-5 text-[#6B4423]" />
                 <div>
-                  <p className="font-medium">Email Notifications</p>
-                  <p className="text-sm text-muted-foreground">
-                    Receive updates about your account via email
+                  <p className="font-medium text-[#1A1A1A]">Email Notifications</p>
+                  <p className="text-sm text-[#8B7355]">
+                    Receive updates via email
                   </p>
                 </div>
               </div>
@@ -47,11 +55,11 @@ export default async function SettingsPage() {
             
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <MessageSquare className="w-5 h-5 text-muted-foreground" />
+                <MessageSquare className="w-5 h-5 text-[#6B4423]" />
                 <div>
-                  <p className="font-medium">Discord Notifications</p>
-                  <p className="text-sm text-muted-foreground">
-                    Get notified in Discord when important events occur
+                  <p className="font-medium text-[#1A1A1A]">Discord Notifications</p>
+                  <p className="text-sm text-[#8B7355]">
+                    Get notified in Discord
                   </p>
                 </div>
               </div>
@@ -60,47 +68,22 @@ export default async function SettingsPage() {
           </CardContent>
         </Card>
 
-        {/* Activity */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="w-5 h-5" />
-              Activity Logs
-            </CardTitle>
-            <CardDescription>
-              Keep track of your activity
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <p className="font-medium">Show activity on profile</p>
-                <Switch />
-              </div>
-              <div className="flex items-center justify-between">
-                <p className="font-medium">Share stats publicly</p>
-                <Switch />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Display */}
-        <Card className="mb-6">
+        <Card className="cafe-card mb-6">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Globe className="w-5 h-5" />
+            <CardTitle className="flex items-center gap-2 text-[#1A1A1A]">
+              <Globe className="w-5 h-5 text-[#6B4423]" />
               Display
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-[#8B7355]">
               Customize your display preferences
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Timezone</Label>
-                <select className="w-full p-2 rounded-lg border bg-background">
+                <Label className="text-[#6B4423]">Timezone</Label>
+                <select className="w-full p-2 rounded-lg border bg-[#F5F0E8]/50 border-[#6B4423]/20">
                   <option>UTC</option>
                   <option>Europe/Berlin</option>
                   <option>America/New_York</option>
@@ -108,8 +91,8 @@ export default async function SettingsPage() {
                 </select>
               </div>
               <div className="space-y-2">
-                <Label>Date Format</Label>
-                <select className="w-full p-2 rounded-lg border bg-background">
+                <Label className="text-[#6B4423]">Date Format</Label>
+                <select className="w-full p-2 rounded-lg border bg-[#F5F0E8]/50 border-[#6B4423]/20">
                   <option>DD/MM/YYYY</option>
                   <option>MM/DD/YYYY</option>
                   <option>YYYY-MM-DD</option>
@@ -121,7 +104,7 @@ export default async function SettingsPage() {
 
         {/* Save Button */}
         <div className="flex justify-end">
-          <Button className="gap-2">
+          <Button className="gap-2 btn-cafe">
             <Save className="w-4 h-4" />
             Save Changes
           </Button>
