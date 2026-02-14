@@ -9,7 +9,10 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Trash2, ArrowRight, Send, Eye } from 'lucide-react'
+import { Plus, Trash2, Send, Coffee, Save } from 'lucide-react'
+import { SendMessageModal } from '@/components/embed/SendMessageModal'
+import { PlaceholderHelper } from '@/components/embed/PlaceholderHelper'
+import Link from 'next/link'
 
 interface EmbedField {
   name: string
@@ -33,22 +36,54 @@ interface MessageData {
   embeds: Embed[]
 }
 
+interface Webhook {
+  id: string
+  name: string
+  webhook_url: string
+}
+
 export default function EmbedBuilderPage() {
   const supabase = createClient()
   const [activeTab, setActiveTab] = useState('content')
-  const [loading, setLoading] = useState(false)
   
   const [message, setMessage] = useState<MessageData>({
     content: '',
     embeds: [{
       title: '',
       description: '',
-      color: '#5865F2',
+      color: '#6B4423',
       fields: []
     }]
   })
 
-  const [previewMode, setPreviewMode] = useState<'split' | 'full'>('split')
+  const [webhooks, setWebhooks] = useState<Webhook[]>([])
+  const [selectedFirm, setSelectedFirm] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchWebhooks = async () => {
+      // Fetch user's firms and their webhooks
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data: firms } = await supabase
+        .from('firms')
+        .select('id')
+        .eq('owner_id', user.id)
+        .limit(1)
+
+      if (firms && firms.length > 0) {
+        setSelectedFirm(firms[0].id)
+        
+        const { data: wh } = await supabase
+          .from('webhooks')
+          .select('*')
+          .eq('firm_id', firms[0].id)
+        
+        if (wh) setWebhooks(wh)
+      }
+    }
+    fetchWebhooks()
+  }, [])
 
   const addEmbed = () => {
     setMessage({
@@ -56,7 +91,7 @@ export default function EmbedBuilderPage() {
       embeds: [...message.embeds, {
         title: '',
         description: '',
-        color: '#5865F2',
+        color: '#6B4423',
         fields: []
       }]
     })
@@ -99,8 +134,18 @@ export default function EmbedBuilderPage() {
     setMessage({ ...message, embeds: newEmbeds })
   }
 
-  const DiscordEmbedPreview = ({ embed, index }: { embed: Embed; index: number }) => {
-    const colorInt = parseInt(embed.color?.replace('#', '') || '5865F2', 16)
+  const handleSaveTemplate = async () => {
+    if (!selectedFirm) return
+    
+    await supabase.from('embed_templates').insert({
+      firm_id: selectedFirm,
+      name: 'Untitled Template',
+      content: message
+    })
+  }
+
+  const DiscordEmbedPreview = ({ embed }: { embed: Embed }) => {
+    const colorInt = parseInt(embed.color?.replace('#', '') || '6B4423', 16)
 
     return (
       <div className="bg-[#313338] rounded-lg overflow-hidden" style={{ borderLeft: `4px solid #${colorInt.toString(16).padStart(6, '0')}` }}>
@@ -151,68 +196,85 @@ export default function EmbedBuilderPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background texture-paper">
       {/* Header */}
-      <header className="border-b bg-muted/50">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div>
-            <h1 className="text-lg font-semibold">Embed Builder</h1>
-            <p className="text-xs text-muted-foreground">Create Discord webhook messages</p>
+      <header className="border-b bg-[#F5F0E8]">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#6B4423] flex items-center justify-center">
+              <Coffee className="w-6 h-6 text-[#F5F0E8]" />
+            </div>
+            <div>
+              <h1 className="text-lg font-bold text-[#1A1A1A]">Embed Barista</h1>
+              <p className="text-xs text-[#6B4423]">Craft your perfect embed</p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="gap-2">
-              <Eye className="w-4 h-4" />
-              Preview
+            <Button 
+              variant="outline" 
+              className="gap-2 border-[#6B4423] text-[#6B4423]"
+              onClick={handleSaveTemplate}
+            >
+              <Save className="w-4 h-4" />
+              Save
             </Button>
-            <Button size="sm" className="gap-2">
-              <Send className="w-4 h-4" />
-              Send
-            </Button>
+            <SendMessageModal 
+              messageData={message}
+              webhooks={webhooks}
+              onSent={() => {}}
+            />
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <div className="flex h-[calc(100vh-60px)]">
+      <div className="flex h-[calc(100vh-72px)]">
         {/* Builder Panel */}
-        <div className="w-1/2 border-r overflow-y-auto">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="p-4">
-            <TabsList className="mb-4">
-              <TabsTrigger value="content">Content</TabsTrigger>
-              <TabsTrigger value="embeds">Embeds</TabsTrigger>
-              <TabsTrigger value="json">JSON</TabsTrigger>
+        <div className="w-1/2 border-r overflow-y-auto scrollbar-cafe p-4">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="mb-4 w-full bg-[#F5F0E8]">
+              <TabsTrigger value="content" className="flex-1">Content</TabsTrigger>
+              <TabsTrigger value="embeds" className="flex-1">Embeds</TabsTrigger>
+              <TabsTrigger value="json" className="flex-1">JSON</TabsTrigger>
             </TabsList>
 
             <TabsContent value="content" className="space-y-4">
-              <Card>
+              <Card className="cafe-card">
                 <CardHeader>
-                  <CardTitle>Message Content</CardTitle>
+                  <CardTitle className="text-[#1A1A1A]">Message Content</CardTitle>
                   <CardDescription>
                     The text above the embed
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Textarea
-                    placeholder="Message content..."
+                    placeholder="Your message here..."
                     value={message.content}
                     onChange={(e) => setMessage({ ...message, content: e.target.value })}
                     rows={4}
+                    className="bg-[#F5F0E8]/50"
                   />
+                  <PlaceholderHelper onInsert={(p) => setMessage({ ...message, content: message.content + ' ' + p })} />
                 </CardContent>
               </Card>
             </TabsContent>
 
             <TabsContent value="embeds" className="space-y-4">
               {message.embeds.map((embed, embedIndex) => (
-                <Card key={embedIndex} className="relative">
+                <Card key={embedIndex} className="cafe-card relative">
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-base">Embed {embedIndex + 1}</CardTitle>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <div className="w-6 h-6 rounded bg-[#6B4423] text-[#F5F0E8] text-xs flex items-center justify-center">
+                          {embedIndex + 1}
+                        </div>
+                        Embed {embedIndex + 1}
+                      </CardTitle>
                       {message.embeds.length > 1 && (
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-destructive"
+                          className="h-8 w-8 text-red-500 hover:text-red-600"
                           onClick={() => removeEmbed(embedIndex)}
                         >
                           <Trash2 className="w-4 h-4" />
@@ -235,13 +297,14 @@ export default function EmbedBuilderPage() {
                         <div className="flex gap-2">
                           <input
                             type="color"
-                            value={embed.color || '#5865F2'}
+                            value={embed.color || '#6B4423'}
                             onChange={(e) => updateEmbed(embedIndex, 'color', e.target.value)}
                             className="w-10 h-10 rounded border cursor-pointer"
                           />
                           <Input
-                            value={embed.color || '#5865F2'}
+                            value={embed.color || '#6B4423'}
                             onChange={(e) => updateEmbed(embedIndex, 'color', e.target.value)}
+                            className="flex-1 font-mono"
                           />
                         </div>
                       </div>
@@ -255,9 +318,12 @@ export default function EmbedBuilderPage() {
                         onChange={(e) => updateEmbed(embedIndex, 'description', e.target.value)}
                         rows={3}
                       />
+                      <PlaceholderHelper onInsert={(p) => {
+                        const newDesc = (embed.description || '') + ' ' + p
+                        updateEmbed(embedIndex, 'description', newDesc)
+                      }} />
                     </div>
 
-                    {/* Author & Footer */}
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>Author Name</Label>
@@ -277,14 +343,13 @@ export default function EmbedBuilderPage() {
                       </div>
                     </div>
 
-                    {/* Fields */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <Label>Fields</Label>
                         <Button
                           variant="outline"
                           size="sm"
-                          className="gap-1"
+                          className="gap-1 border-[#6B4423] text-[#6B4423]"
                           onClick={() => addField(embedIndex)}
                         >
                           <Plus className="w-3 h-3" />
@@ -293,7 +358,7 @@ export default function EmbedBuilderPage() {
                       </div>
                       
                       {embed.fields.map((field, fieldIndex) => (
-                        <div key={fieldIndex} className="flex gap-2 items-start p-3 bg-muted rounded-lg">
+                        <div key={fieldIndex} className="flex gap-2 items-start p-3 bg-[#F5F0E8]/50 rounded-lg">
                           <div className="flex-1 space-y-2">
                             <Input
                               placeholder="Name"
@@ -313,13 +378,14 @@ export default function EmbedBuilderPage() {
                                 type="checkbox"
                                 checked={field.inline}
                                 onChange={(e) => updateField(embedIndex, fieldIndex, 'inline', e.target.checked)}
+                                className="rounded"
                               />
                               Inline
                             </label>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 text-destructive"
+                              className="h-8 w-8 text-red-500"
                               onClick={() => removeField(embedIndex, fieldIndex)}
                             >
                               <Trash2 className="w-3 h-3" />
@@ -332,16 +398,16 @@ export default function EmbedBuilderPage() {
                 </Card>
               ))}
 
-              <Button onClick={addEmbed} className="w-full gap-2">
+              <Button onClick={addEmbed} className="w-full gap-2 btn-cafe">
                 <Plus className="w-4 h-4" />
                 Add Another Embed
               </Button>
             </TabsContent>
 
             <TabsContent value="json">
-              <Card>
+              <Card className="cafe-card">
                 <CardHeader>
-                  <CardTitle>JSON Output</CardTitle>
+                  <CardTitle className="text-[#1A1A1A]">JSON Output</CardTitle>
                   <CardDescription>
                     Copy this JSON to use in your webhook
                   </CardDescription>
@@ -351,7 +417,7 @@ export default function EmbedBuilderPage() {
                     value={JSON.stringify(message, null, 2)}
                     readOnly
                     rows={20}
-                    className="font-mono text-sm"
+                    className="font-mono text-sm bg-[#1A1A1A] text-[#F5F0E8]"
                   />
                 </CardContent>
               </Card>
@@ -360,25 +426,33 @@ export default function EmbedBuilderPage() {
         </div>
 
         {/* Preview Panel */}
-        <div className="w-1/2 bg-[#2b2d31] p-4 overflow-y-auto">
+        <div className="w-1/2 bg-[#2b2d31] p-4 overflow-y-auto scrollbar-cafe">
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="font-medium text-white">Preview</h3>
-            <Badge variant="secondary">Discord Style</Badge>
+            <h3 className="font-medium text-[#F5F0E8] flex items-center gap-2">
+              <Coffee className="w-5 h-5 text-[#6B4423]" />
+              Preview
+            </h3>
+            <Badge className="bg-[#6B4423] text-[#F5F0E8]">Discord Style</Badge>
           </div>
           
-          {/* Message Content Preview */}
           {message.content && (
-            <div className="mb-4 text-[#dbdee1] text-sm whitespace-pre-wrap">
+            <div className="mb-4 text-[#dbdee1] text-sm whitespace-pre-wrap bg-[#313338] p-3 rounded-lg">
               {message.content}
             </div>
           )}
 
-          {/* Embeds Preview */}
           <div className="space-y-2">
             {message.embeds.map((embed, i) => (
-              <DiscordEmbedPreview key={i} embed={embed} index={i} />
+              <DiscordEmbedPreview key={i} embed={embed} />
             ))}
           </div>
+          
+          {message.embeds.length === 0 && (
+            <div className="text-center py-12 text-[#6B4423]">
+              <Coffee className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>Add an embed to see the preview</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
