@@ -11,6 +11,7 @@ import {
   Webhook,
   Building2,
   FolderOpen,
+  User,
   Settings,
   LogOut,
   Menu,
@@ -35,6 +36,7 @@ const navItems: NavItem[] = [
   { title: 'Webhooks', href: '/dashboard/webhooks', icon: Webhook },
   { title: 'Embed Builder', href: '/dashboard/embed', icon: Building2 },
   { title: 'Templates', href: '/dashboard/templates', icon: FolderOpen },
+  { title: 'Profile', href: '/dashboard/profile', icon: User },
   { title: 'Settings', href: '/dashboard/settings', icon: Settings },
 ]
 
