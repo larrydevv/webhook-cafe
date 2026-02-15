@@ -117,7 +117,7 @@ export function SendMessageModal({ messageData, webhooks, onSent }: SendMessageM
           Serve to Discord
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[450px] bg-[#F5F0E8] border-[#6B4423]">
+      <DialogContent className="w-[calc(100%-2rem)] max-w-[450px] bg-[#F5F0E8] border-[#6B4423] max-h-[90vh] overflow-y-auto">
         
         {/* Coffee Pouring Animation */}
         <div className="relative">
