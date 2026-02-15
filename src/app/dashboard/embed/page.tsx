@@ -9,10 +9,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Trash2, Send, Coffee, Save } from 'lucide-react'
+import { Plus, Trash2, Send, Coffee, Save, Eye, Code2 } from 'lucide-react'
 import { SendMessageModal } from '@/components/embed/SendMessageModal'
 import { PlaceholderHelper } from '@/components/embed/PlaceholderHelper'
-import Link from 'next/link'
 
 interface EmbedField {
   name: string
@@ -45,6 +44,7 @@ interface Webhook {
 export default function EmbedBuilderPage() {
   const supabase = createClient()
   const [activeTab, setActiveTab] = useState('content')
+  const [viewMode, setViewMode] = useState<'builder' | 'preview' | 'json'>('builder')
   
   const [message, setMessage] = useState<MessageData>({
     content: '',
@@ -61,7 +61,6 @@ export default function EmbedBuilderPage() {
 
   useEffect(() => {
     const fetchWebhooks = async () => {
-      // Fetch user's firms and their webhooks
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
@@ -73,12 +72,10 @@ export default function EmbedBuilderPage() {
 
       if (firms && firms.length > 0) {
         setSelectedFirm(firms[0].id)
-        
         const { data: wh } = await supabase
           .from('webhooks')
           .select('*')
           .eq('firm_id', firms[0].id)
-        
         if (wh) setWebhooks(wh)
       }
     }
@@ -132,16 +129,6 @@ export default function EmbedBuilderPage() {
     const newEmbeds = [...message.embeds]
     newEmbeds[embedIndex].fields = newEmbeds[embedIndex].fields.filter((_, i) => i !== fieldIndex)
     setMessage({ ...message, embeds: newEmbeds })
-  }
-
-  const handleSaveTemplate = async () => {
-    if (!selectedFirm) return
-    
-    await supabase.from('embed_templates').insert({
-      firm_id: selectedFirm,
-      name: 'Untitled Template',
-      content: message
-    })
   }
 
   const DiscordEmbedPreview = ({ embed }: { embed: Embed }) => {
@@ -198,25 +185,48 @@ export default function EmbedBuilderPage() {
   return (
     <div className="min-h-screen bg-background texture-paper">
       {/* Header */}
-      <header className="border-b bg-[#F5F0E8]">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+      <header className="border-b bg-[#F5F0E8] sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#6B4423] flex items-center justify-center">
-              <Coffee className="w-6 h-6 text-[#F5F0E8]" />
+            <div className="w-8 h-8 rounded-lg bg-[#6B4423] flex items-center justify-center flex-shrink-0">
+              <Coffee className="w-5 h-5 text-[#F5F0E8]" />
             </div>
-            <div>
-              <h1 className="text-lg font-bold text-[#1A1A1A]">Embed Barista</h1>
-              <p className="text-xs text-[#6B4423]">Craft your perfect embed</p>
+            <div className="hidden sm:block">
+              <h1 className="text-sm font-bold text-[#1A1A1A]">Embed Barista</h1>
+              <p className="text-xs text-[#6B4423]">Craft your embed</p>
             </div>
           </div>
+          
+          {/* Mobile View Toggle */}
+          <div className="flex items-center gap-1 bg-[#F5F0E8]/50 rounded-lg p-1">
+            <button
+              onClick={() => { setViewMode('builder'); setActiveTab('content'); }}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1 ${
+                viewMode === 'builder' ? 'bg-[#6B4423] text-white' : 'text-[#6B4423] hover:bg-[#6B4423]/10'
+              }`}
+            >
+              <Code2 className="w-3 h-3" />
+              <span className="hidden xs:inline">Builder</span>
+            </button>
+            <button
+              onClick={() => setViewMode('preview')}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1 ${
+                viewMode === 'preview' ? 'bg-[#6B4423] text-white' : 'text-[#6B4423] hover:bg-[#6B4423]/10'
+              }`}
+            >
+              <Eye className="w-3 h-3" />
+              <span className="hidden xs:inline">Preview</span>
+            </button>
+          </div>
+
           <div className="flex items-center gap-2">
             <Button 
               variant="outline" 
-              className="gap-2 border-[#6B4423] text-[#6B4423]"
-              onClick={handleSaveTemplate}
+              size="sm"
+              className="gap-1 border-[#6B4423] text-[#6B4423] text-xs"
             >
-              <Save className="w-4 h-4" />
-              Save
+              <Save className="w-3 h-3" />
+              <span className="hidden sm:inline">Save</span>
             </Button>
             <SendMessageModal 
               messageData={message}
@@ -227,233 +237,233 @@ export default function EmbedBuilderPage() {
         </div>
       </header>
 
-      {/* Main Content */}
-      <div className="flex h-[calc(100vh-72px)]">
+      {/* Mobile Layout */}
+      <div className="block md:flex">
         {/* Builder Panel */}
-        <div className="w-1/2 border-r overflow-y-auto scrollbar-cafe p-4">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="mb-4 w-full bg-[#F5F0E8]">
-              <TabsTrigger value="content" className="flex-1">Content</TabsTrigger>
-              <TabsTrigger value="embeds" className="flex-1">Embeds</TabsTrigger>
-              <TabsTrigger value="json" className="flex-1">JSON</TabsTrigger>
-            </TabsList>
+        {viewMode === 'builder' && (
+          <div className="w-full md:w-1/2 border-r overflow-y-auto scrollbar-cafe p-4">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="mb-4 w-full bg-[#F5F0E8] grid grid-cols-3">
+                <TabsTrigger value="content" className="text-xs">Content</TabsTrigger>
+                <TabsTrigger value="embeds" className="text-xs">Embeds</TabsTrigger>
+                <TabsTrigger value="json" className="text-xs">JSON</TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="content" className="space-y-4">
-              <Card className="cafe-card">
-                <CardHeader>
-                  <CardTitle className="text-[#1A1A1A]">Message Content</CardTitle>
-                  <CardDescription>
-                    The text above the embed
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Textarea
-                    placeholder="Your message here..."
-                    value={message.content}
-                    onChange={(e) => setMessage({ ...message, content: e.target.value })}
-                    rows={4}
-                    className="bg-[#F5F0E8]/50"
-                  />
-                  <PlaceholderHelper onInsert={(p) => setMessage({ ...message, content: message.content + ' ' + p })} />
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="embeds" className="space-y-4">
-              {message.embeds.map((embed, embedIndex) => (
-                <Card key={embedIndex} className="cafe-card relative">
+              <TabsContent value="content" className="space-y-4 mt-4">
+                <Card className="cafe-card">
                   <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <div className="w-6 h-6 rounded bg-[#6B4423] text-[#F5F0E8] text-xs flex items-center justify-center">
-                          {embedIndex + 1}
-                        </div>
-                        Embed {embedIndex + 1}
-                      </CardTitle>
-                      {message.embeds.length > 1 && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-red-500 hover:text-red-600"
-                          onClick={() => removeEmbed(embedIndex)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      )}
-                    </div>
+                    <CardTitle className="text-[#1A1A1A] text-base">Message Content</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Title</Label>
-                        <Input
-                          placeholder="Embed Title"
-                          value={embed.title || ''}
-                          onChange={(e) => updateEmbed(embedIndex, 'title', e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Color</Label>
-                        <div className="flex gap-2">
-                          <input
-                            type="color"
-                            value={embed.color || '#6B4423'}
-                            onChange={(e) => updateEmbed(embedIndex, 'color', e.target.value)}
-                            className="w-10 h-10 rounded border cursor-pointer"
-                          />
-                          <Input
-                            value={embed.color || '#6B4423'}
-                            onChange={(e) => updateEmbed(embedIndex, 'color', e.target.value)}
-                            className="flex-1 font-mono"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Description</Label>
-                      <Textarea
-                        placeholder="Embed description..."
-                        value={embed.description || ''}
-                        onChange={(e) => updateEmbed(embedIndex, 'description', e.target.value)}
-                        rows={3}
-                      />
-                      <PlaceholderHelper onInsert={(p) => {
-                        const newDesc = (embed.description || '') + ' ' + p
-                        updateEmbed(embedIndex, 'description', newDesc)
-                      }} />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Author Name</Label>
-                        <Input
-                          placeholder="Author"
-                          value={embed.author?.name || ''}
-                          onChange={(e) => updateEmbed(embedIndex, 'author', { ...embed.author, name: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Footer Text</Label>
-                        <Input
-                          placeholder="Footer"
-                          value={embed.footer?.text || ''}
-                          onChange={(e) => updateEmbed(embedIndex, 'footer', { ...embed.footer, text: e.target.value })}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label>Fields</Label>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-1 border-[#6B4423] text-[#6B4423]"
-                          onClick={() => addField(embedIndex)}
-                        >
-                          <Plus className="w-3 h-3" />
-                          Add Field
-                        </Button>
-                      </div>
-                      
-                      {embed.fields.map((field, fieldIndex) => (
-                        <div key={fieldIndex} className="flex gap-2 items-start p-3 bg-[#F5F0E8]/50 rounded-lg">
-                          <div className="flex-1 space-y-2">
-                            <Input
-                              placeholder="Name"
-                              value={field.name}
-                              onChange={(e) => updateField(embedIndex, fieldIndex, 'name', e.target.value)}
-                            />
-                            <Textarea
-                              placeholder="Value"
-                              value={field.value}
-                              onChange={(e) => updateField(embedIndex, fieldIndex, 'value', e.target.value)}
-                              rows={2}
-                            />
-                          </div>
-                          <div className="flex flex-col gap-2">
-                            <label className="flex items-center gap-2 text-xs">
-                              <input
-                                type="checkbox"
-                                checked={field.inline}
-                                onChange={(e) => updateField(embedIndex, fieldIndex, 'inline', e.target.checked)}
-                                className="rounded"
-                              />
-                              Inline
-                            </label>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-red-500"
-                              onClick={() => removeField(embedIndex, fieldIndex)}
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                  <CardContent className="space-y-3">
+                    <Textarea
+                      placeholder="Your message here..."
+                      value={message.content}
+                      onChange={(e) => setMessage({ ...message, content: e.target.value })}
+                      rows={3}
+                      className="bg-[#F5F0E8]/50 text-sm"
+                    />
+                    <PlaceholderHelper onInsert={(p) => setMessage({ ...message, content: message.content + ' ' + p })} />
                   </CardContent>
                 </Card>
-              ))}
+              </TabsContent>
 
-              <Button onClick={addEmbed} className="w-full gap-2 btn-cafe">
-                <Plus className="w-4 h-4" />
-                Add Another Embed
-              </Button>
-            </TabsContent>
+              <TabsContent value="embeds" className="space-y-4 mt-4">
+                {message.embeds.map((embed, embedIndex) => (
+                  <Card key={embedIndex} className="cafe-card">
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded bg-[#6B4423] text-[#F5F0E8] text-xs flex items-center justify-center">
+                            {embedIndex + 1}
+                          </div>
+                          <span className="text-sm font-medium text-[#1A1A1A]">Embed {embedIndex + 1}</span>
+                        </div>
+                        {message.embeds.length > 1 && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-red-500"
+                            onClick={() => removeEmbed(embedIndex)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <Label className="text-xs">Title</Label>
+                          <Input
+                            placeholder="Title"
+                            value={embed.title || ''}
+                            onChange={(e) => updateEmbed(embedIndex, 'title', e.target.value)}
+                            className="h-8 text-sm"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Color</Label>
+                          <div className="flex gap-1">
+                            <input
+                              type="color"
+                              value={embed.color || '#6B4423'}
+                              onChange={(e) => updateEmbed(embedIndex, 'color', e.target.value)}
+                              className="w-8 h-8 rounded cursor-pointer"
+                            />
+                            <Input
+                              value={embed.color || '#6B4423'}
+                              onChange={(e) => updateEmbed(embedIndex, 'color', e.target.value)}
+                              className="flex-1 h-8 text-sm font-mono"
+                            />
+                          </div>
+                        </div>
+                      </div>
 
-            <TabsContent value="json">
-              <Card className="cafe-card">
-                <CardHeader>
-                  <CardTitle className="text-[#1A1A1A]">JSON Output</CardTitle>
-                  <CardDescription>
-                    Copy this JSON to use in your webhook
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Textarea
-                    value={JSON.stringify(message, null, 2)}
-                    readOnly
-                    rows={20}
-                    className="font-mono text-sm bg-[#1A1A1A] text-[#F5F0E8]"
-                  />
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Description</Label>
+                        <Textarea
+                          placeholder="Description..."
+                          value={embed.description || ''}
+                          onChange={(e) => updateEmbed(embedIndex, 'description', e.target.value)}
+                          rows={2}
+                          className="text-sm"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <Label className="text-xs">Author</Label>
+                          <Input
+                            placeholder="Author name"
+                            value={embed.author?.name || ''}
+                            onChange={(e) => updateEmbed(embedIndex, 'author', { ...embed.author, name: e.target.value })}
+                            className="h-8 text-sm"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Footer</Label>
+                          <Input
+                            placeholder="Footer text"
+                            value={embed.footer?.text || ''}
+                            onChange={(e) => updateEmbed(embedIndex, 'footer', { ...embed.footer, text: e.target.value })}
+                            className="h-8 text-sm"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs">Fields</Label>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-6 text-xs gap-1 border-[#6B4423] text-[#6B4423]"
+                            onClick={() => addField(embedIndex)}
+                          >
+                            <Plus className="w-3 h-3" />
+                            Add
+                          </Button>
+                        </div>
+                        
+                        {embed.fields.map((field, fieldIndex) => (
+                          <div key={fieldIndex} className="flex gap-2 items-start p-2 bg-[#F5F0E8]/50 rounded-lg">
+                            <div className="flex-1 space-y-1">
+                              <Input
+                                placeholder="Name"
+                                value={field.name}
+                                onChange={(e) => updateField(embedIndex, fieldIndex, 'name', e.target.value)}
+                                className="h-7 text-xs"
+                              />
+                              <Textarea
+                                placeholder="Value"
+                                value={field.value}
+                                onChange={(e) => updateField(embedIndex, fieldIndex, 'value', e.target.value)}
+                                rows={1}
+                                className="text-xs"
+                              />
+                            </div>
+                            <div className="flex flex-col gap-1">
+                              <label className="flex items-center gap-1 text-xs">
+                                <input
+                                  type="checkbox"
+                                  checked={field.inline}
+                                  onChange={(e) => updateField(embedIndex, fieldIndex, 'inline', e.target.checked)}
+                                  className="rounded"
+                                />
+                                Inline
+                              </label>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 text-red-500"
+                                onClick={() => removeField(embedIndex, fieldIndex)}
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+
+                <Button onClick={addEmbed} className="w-full gap-2 btn-cafe text-sm">
+                  <Plus className="w-4 h-4" />
+                  Add Another Embed
+                </Button>
+              </TabsContent>
+
+              <TabsContent value="json" className="mt-4">
+                <Card className="cafe-card">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-[#1A1A1A] text-base">JSON Output</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Textarea
+                      value={JSON.stringify(message, null, 2)}
+                      readOnly
+                      rows={15}
+                      className="font-mono text-xs bg-[#1A1A1A] text-[#F5F0E8]"
+                    />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+        )}
 
         {/* Preview Panel */}
-        <div className="w-1/2 bg-[#2b2d31] p-4 overflow-y-auto scrollbar-cafe">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="font-medium text-[#F5F0E8] flex items-center gap-2">
-              <Coffee className="w-5 h-5 text-[#6B4423]" />
-              Preview
-            </h3>
-            <Badge className="bg-[#6B4423] text-[#F5F0E8]">Discord Style</Badge>
-          </div>
-          
-          {message.content && (
-            <div className="mb-4 text-[#dbdee1] text-sm whitespace-pre-wrap bg-[#313338] p-3 rounded-lg">
-              {message.content}
+        {viewMode === 'preview' && (
+          <div className="w-full md:w-1/2 bg-[#2b2d31] p-4 overflow-y-auto scrollbar-cafe">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="font-medium text-[#F5F0E8] flex items-center gap-2">
+                <Eye className="w-4 h-4 text-[#6B4423]" />
+                Preview
+              </h3>
+              <Badge className="bg-[#6B4423] text-[#F5F0E8] text-xs">Discord</Badge>
             </div>
-          )}
+            
+            {message.content && (
+              <div className="mb-4 text-[#dbdee1] text-sm whitespace-pre-wrap bg-[#313338] p-3 rounded-lg">
+                {message.content}
+              </div>
+            )}
 
-          <div className="space-y-2">
-            {message.embeds.map((embed, i) => (
-              <DiscordEmbedPreview key={i} embed={embed} />
-            ))}
-          </div>
-          
-          {message.embeds.length === 0 && (
-            <div className="text-center py-12 text-[#6B4423]">
-              <Coffee className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>Add an embed to see the preview</p>
+            <div className="space-y-3">
+              {message.embeds.map((embed, i) => (
+                <DiscordEmbedPreview key={i} embed={embed} />
+              ))}
             </div>
-          )}
-        </div>
+            
+            {message.embeds.length === 0 && (
+              <div className="text-center py-12 text-[#6B4423]">
+                <Coffee className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p className="text-sm">Add an embed to see preview</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
